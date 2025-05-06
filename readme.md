@@ -34,5 +34,4 @@ Welcome to the **Hotel Reservation System**, a Java-based desktop application de
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/prabhatthakuryt/Hotel-Reservation-System.git
-   cd Hotel-Reservation-System
+   git clone https://github.com/atharve16/Hotel-Reservation-System.git
