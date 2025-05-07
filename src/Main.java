@@ -1,5 +1,9 @@
-import java.sql.*;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Connection;
 import java.util.Scanner;
+import java.sql.Statement;
+import java.sql.ResultSet;
 
 public class Main{
 
@@ -7,7 +11,7 @@ public class Main{
     private static final String username = "root";
     private static final String password = "Atharve@10";
 
-    public static void main(String[] args)throws ClassNotFoundException {
+    public static void main(String[] args)throws ClassNotFoundException, SQLException {
 
         try{
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -21,7 +25,7 @@ public class Main{
 
             while(true){
                 System.out.println();
-                System.out.println("HOTEL MANAGEMENT SYSTEM");
+                System.out.println("\n--- Welcome to Hotel Management System ---\n");
                 Scanner scanner = new Scanner(System.in);
                 System.out.println("1. Reserve a room");
                 System.out.println("2. View Reservations");
@@ -44,8 +48,16 @@ public class Main{
                         break;
                     case 4:
                         updateReservation(scanner, stmt);
+                        break;
+                    case 5:
+                        deleteReservation(scanner, stmt);
+                        break;
+                    case 0:
+                        exit();
+                        scanner.close();
+                        return;
                     case 112:
-                        adminDashboard(scanner, stmt);
+                        adminDashboard(stmt);
                         break;
                     default:
                         System.out.println("INVALID CHOICE. TRY AGAIN");
@@ -54,6 +66,8 @@ public class Main{
             }
         }catch(SQLException e){
             System.out.println(e.getMessage());
+        }catch (InterruptedException e){
+            throw new RuntimeException(e);
         }
     }
 
@@ -80,16 +94,16 @@ public class Main{
             e.printStackTrace();
         }
     }
-    private static void viewReservation(Scanner scanner, Statement stmt)throws SQLException{
+
+    private static void viewReservation(Scanner scanner, Statement stmt)throws SQLException {
         System.out.println("ENTER ROOM NUMBER");
         int room = scanner.nextInt();
 
         try{
-            String query = "SELECT * FROM reservation" +
-                    "WHERE room_number = " + room;
+            String query = "SELECT * FROM reservation " +
+                    " WHERE room_number = " + room;
 
             ResultSet rs = stmt.executeQuery(query);
-
 
             System.out.println("Current Reservations:");
             System.out.println("+----------------+-----------------+---------------+----------------------+-------------------------+");
@@ -139,18 +153,24 @@ public class Main{
         System.out.println("ENTER RESERVATION ID TO UPDATE");
         int id = scan.nextInt();
         scan.nextLine();
+
+        if (!reservationExist(stmt, id)) {
+            System.out.println("Reservation not found for the given ID.");
+            return;
+        }
+
         System.out.println("ENTER NEW GUEST NAME");
-        String name = scan.next();
-        System.out.println("ENTER NEW GUEST CONTACT NUMBER");
-        String contact = scan.next();
+        String name = scan.nextLine();
         System.out.println("ENTER THE ALLOTED ROOM TO NEW GUEST");
         int room = scan.nextInt();
+        System.out.println("ENTER NEW GUEST CONTACT NUMBER");
+        String contact = scan.next();
 
         try{
-            String query = "UPDATE reservation SET"
-                    + "name = '" + name + "' ,"
-                    + "room_number = " + room + ","
-                    + "contact = '" + contact + "'"
+            String query = "UPDATE reservation SET "
+                    + "name = '" + name + "', "
+                    + "room_number = " + room + ", "
+                    + "contact = '" + contact + "' "
                     + "WHERE id = " + id;
 
             int AffectedRows = stmt.executeUpdate(query);
@@ -169,6 +189,11 @@ public class Main{
         System.out.println("ENTER RESERVATION ID TO DELETE");
         int id = scan.nextInt();
 
+        if (!reservationExist(stmt, id)) {
+            System.out.println("Reservation not found for the given ID.");
+            return;
+        }
+
         try{
             String query = "DELETE FROM reservation WHERE id = " + id;
             int AffectedRows = stmt.executeUpdate(query);
@@ -184,7 +209,23 @@ public class Main{
 
     }
 
-    private static void adminDashboard(Scanner scanner, Statement stmt)throws SQLException{
+    private static boolean reservationExist(Statement stmt, int id){
+        try{
+            String query = " SELECT id FROM reservation WHERE id = " + id;
+            ResultSet rs = stmt.executeQuery(query);
+            return rs.next();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+    }
+
+    private static void exit()throws InterruptedException{
+        System.out.println("ThankYou For Using Hotel Reservation System!!!");
+    }
+
+    private static void adminDashboard(Statement stmt)throws SQLException{
         try{
             String query = "SELECT * FROM reservation";
             ResultSet rs = stmt.executeQuery(query);
